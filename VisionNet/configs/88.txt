@@ -1,0 +1,21 @@
+expname: 88
+basedir: ./logs
+datadir: ./object/88/data
+dataset_type: osf
+
+no_batching: True
+
+use_viewdirs: True
+use_lightdirs: True
+white_bkgd: True
+lrate: 0.0005
+
+N_samples: 64
+N_importance: 128
+N_rand: 1024
+
+half_res: False
+
+i_video: 10000000000000000
+i_testset: 10000000000000000
+scaled_sigmoid: True
