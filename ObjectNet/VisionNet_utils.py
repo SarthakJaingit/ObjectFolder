@@ -71,101 +71,6 @@ def run_network(inputs, viewdirs, lightdirs, fn, embed_fn, embedviews_fn, embedl
     return outputs
 
 
-def compute_shadows(ray_batch, pts, object_params, **kwargs):
-    """Compute shadows cast by other objects onto the current object.
-
-    Args:
-        ray_batch: [R?, M] float tensor. Batch of primary rays.
-        pts: [R?, S, 3] float tensor. Sampled points along rays.
-        object_params: List of object parameters that must contain the following items:
-                network_fn: Coarse network.
-                network_fine: Fine network.
-                intersect_bbox: bool. If true, intersect rays with object bbox. Only
-                    rays that intersect are evaluated, and sampling bounds are
-                    determined by the intersection bounds.
-            Additional parameters that are only required if intersect_bbox = True:
-                box_center: List of length 3 containing the (x, y, z) center of the bbox.
-                box_dims: List of length 3 containing the x, y, z dimensions of the bbox.
-            Optional params:
-                translation: List of length 3 containing the (x, y, z) object-to-world translation.
-        **kwargs: Dict. Additional arguments.
-
-    Returns:
-        trans: [R?, S, 1] float tensor. Transmittance along shadow rays.
-    """
-    if len(object_params) == 0:
-        raise ValueError(f'object_params must contain at least one element.')
-
-    # Get batch of shadow rays.
-    if kwargs['shadow_lightdirs_method'] == 'random':
-        #lightdirs_method = 'random_upper'  # Only use upper hemisphere for shadows.
-        lightdirs_method = 'random'  # Only use upper hemisphere for shadows.
-    else:
-        lightdirs_method = kwargs['shadow_lightdirs_method']
-    shadow_ray_batch = shadow_utils.create_ray_batch(  # [R?S, M]
-            pts=pts,  # [R?, S, M]
-            metadata=kwargs['metadata'],
-            use_viewdirs=kwargs['use_viewdirs'],
-            lightdirs_method=lightdirs_method,
-            ray_batch=ray_batch)
-
-    # Render rays in batches, but don't render indirect/shadows a second time.
-    kwargs['render_shadows'] = False
-    kwargs['render_indirect'] = False
-    kwargs['chunk'] = kwargs['secondary_chunk']
-    all_ret = batchify_rays(
-            shadow_ray_batch, object_params=object_params, **kwargs)
-
-    # Compute transmittance.
-    trans = shadow_utils.compute_transmittance(  # [R?S,]
-            alpha=all_ret['alpha'])  # [R?S, SO, 1]
-    trans = torch.reshape(trans, [pts.shape[0], -1, 1])  # [R?, S, 1]
-    return trans  # [R?, S, 1]
-
-
-def compute_indirect_illumination(rays_i, pts, object_params, **kwargs):
-    """Compute shadows cast by other objects onto the current object.
-    Args:
-        pts: [R?, S, 3] float tensor. Sampled points along rays.
-        object_params: List of object parameters that must contain the following items:
-                network_fn: Coarse network.
-                network_fine: Fine network.
-                intersect_bbox: bool. If true, intersect rays with object bbox. Only
-                    rays that intersect are evaluated, and sampling bounds are
-                    determined by the intersection bounds.
-            Additional parameters that are only required if intersect_bbox = True:
-                box_center: List of length 3 containing the (x, y, z) center of the bbox.
-                box_dims: List of length 3 containing the x, y, z dimensions of the bbox.
-            Optional params:
-                translation: List of length 3 containing the (x, y, z) object-to-world
-                    translation.
-        **kwargs: Dict. Additional arguments.
-    Returns:
-        indirect_radiance: [R?, S, 3] float tensor. Indirect radiance from secondary rays.
-    """
-    if len(object_params) == 0:
-        raise ValueError(f'object_params must contain at least one element.')
-
-    # Get batch of secondary rays.
-    ray_batch = indirect_utils.create_ray_batch(  # [R?S, M]
-            pts=pts,  # [R?, S, M]
-            near=kwargs['near'],
-            far=kwargs['far'],
-            rays_i=rays_i,
-            use_viewdirs=kwargs['use_viewdirs'])
-
-    # Render rays in batches, but don't render indirect/shadows a second time.
-    kwargs['render_shadows'] = False
-    kwargs['render_indirect'] = False
-    kwargs['chunk'] = kwargs['secondary_chunk']
-    all_ret = batchify_rays(
-            ray_batch, object_params=object_params, **kwargs)
-
-    # Extract indirect radiance.
-    indirect_radiance = torch.reshape(all_ret['rgb_map'], [pts.shape[0], -1, 3])  # [R, S, 3]
-    return indirect_radiance  # [R?, S, 3]
-
-
 def evaluate_single_object(
         ray_batch, params, other_params=None, ret_ray_batch=False, **kwargs):
     """Evaluate rays for a single object.
@@ -243,14 +148,14 @@ def evaluate_single_object(
             other_params = [p for p in other_params if p['intersect_bbox']]
         if len(other_params) > 0:
             rays_i = ray_batch_obj_to_eval[:, -1:]  # [R?, 1]
-            if kwargs['render_shadows']:
-                shadow_trans = compute_shadows(
-                        ray_batch_to_eval, ret['pts'], other_params, **kwargs)
-                ret['rgb'] *= shadow_trans  # [R?, S, 3]
-            elif kwargs['render_indirect']:
-                indirect_radiance = compute_indirect_illumination(
-                        rays_i, ret['pts'], other_params, **kwargs)
-                ret['rgb'] *= indirect_radiance  # [R?, S, 3]
+            #if kwargs['render_shadows']:
+            #    shadow_trans = compute_shadows(
+            #            ray_batch_to_eval, ret['pts'], other_params, **kwargs)
+            #    ret['rgb'] *= shadow_trans  # [R?, S, 3]
+            #elif kwargs['render_indirect']:
+            #    indirect_radiance = compute_indirect_illumination(
+            #            rays_i, ret['pts'], other_params, **kwargs)
+            #    ret['rgb'] *= indirect_radiance  # [R?, S, 3]
         if 'light_rgb' in params:
             light_rgb = torch.tensor(params['light_rgb'], dtype=tf.float32)[None, None, :]
             ret0['rgb'] *= light_rgb
@@ -482,7 +387,7 @@ def render_path(render_poses, hwf, chunk, render_kwargs, gt_imgs=None, savedir=N
 
         if savedir is not None:
             rgb8 = to8b(rgbs[-1])
-            filename = os.path.join(savedir, '{:03d}.png'.format(i))
+            filename = os.path.join(savedir, '{}.png'.format(i))
             imageio.imwrite(filename, rgb8)
 
     rgbs = np.stack(rgbs, 0)

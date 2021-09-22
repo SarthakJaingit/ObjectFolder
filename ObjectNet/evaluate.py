@@ -26,6 +26,7 @@ import TouchNet_model
 
 from scipy.io.wavfile import write
 import librosa
+import imageio
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -318,12 +319,16 @@ def TouchNet_eval(args):
     preds = (((preds + 1) / 2) * 255)
     preds = np.transpose(preds.reshape((N, -1, 3)), axes = [0, 2, 1]).reshape((N, C, W, H))
 
-    preds = np.clip(np.rint(preds), 0, 255)
+    preds = np.clip(np.rint(preds), 0, 255).astype(np.uint8)
     preds = preds.transpose(0,2,3,1)
 
-    #save evaluation results
     os.makedirs(args.touch_results_path, exist_ok=True)
-    np.save(os.path.join(args.touch_results_path, "touch.npy"), preds)
+    #save evaluation results
+    for i in trange(N):
+        filename = os.path.join(args.touch_results_path, '{}.png'.format(i+1))
+        imageio.imwrite(filename, preds[i])
+
+    #np.save(os.path.join(args.touch_results_path, "touch.npy"), preds)
 
 
 if __name__ =='__main__':
