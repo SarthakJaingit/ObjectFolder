@@ -48,3 +48,15 @@ This code can be given with the following command-line arguments:
   * `--audio_results_dir`: The path of audio results directory to save rendered audio wav files.
   * `--touch_vertex_file_path`: The path of touch testing vertex file, which should be a npy file.
   * `--touch_results_dir`: The path of touch results directory to save rendered touch tactile images.
+
+For example:
+```
+  $ python evaluate.py --object_file_path ../Objects/1/ObjectFile.pth \
+      --vision_test_file_path vision_test.json \
+      --vision_results_dir ./vision_results \
+      --audio_vertex_file_path audio_vertices.npy \
+      --audio_forces_file_path audio_forces.npy \
+      --audio_results_dir ./audio_results \
+      --touch_vertex_file_path touch_vertices.npy \
+      --touch_results_path ./touch_results
+```
