@@ -49,30 +49,28 @@ def config_parser():
                         help='number of pts sent through network in parallel, decrease if running out of memory')
 
     # AudioNet options
-    parser.add_argument('--audio_vertex_file_path', default='./data/vertex.npy', help='path to dataset')
+    parser.add_argument('--audio_vertices_file_path', default='./data/vertex.npy', help='path to dataset')
     parser.add_argument('--audio_forces_file_path', default='./data/forces.npy', help='path to dataset')
     parser.add_argument('--audio_batchSize', type=int, default=10000, help='input batch size')
     parser.add_argument('--audio_results_dir', type=str, default='./results/audio-nerf/', help='dir to save evaluation results')
 
     # TouchNet options
-    parser.add_argument('--touch_vertex_file_path', default='./data/vertex.npy', help='path to dataset')
+    parser.add_argument('--touch_vertices_file_path', default='./data/vertex.npy', help='path to dataset')
     parser.add_argument('--touch_batchSize', type=int, default=10000, help='input batch size')
-    parser.add_argument('--touch_results_path', type=str, default='./results/audio-nerf/', help='dir to save evaluation results')
+    parser.add_argument('--touch_results_dir', type=str, default='./results/audio-nerf/', help='dir to save evaluation results')
 
     return parser
 
 
 def VisionNet_eval(args):
 
-    # Force white_bkgd to be off if we are rendering indirect.
     args.secondary_chunk = args.chunk
 
     metadata, render_metadata = None, None
     near = 0.01
     far = 4
 
-    images, poses, hwf, i_split, metadata = load_osf_data(args.vision_test_file_path)
-    print('Loaded osf', images, hwf, args.vision_test_file_path)
+    poses, hwf, i_split, metadata = load_osf_data(args.vision_test_file_path)
     i_test = i_split[0]
 
     render_poses = np.array(poses[i_test])
@@ -127,7 +125,7 @@ def AudioNet_eval(args):
     audio_stft_time_dim = 201
     audio_stft_freq_dim = 257
     audio_network_depth = 8
-    xyz = np.load(args.audio_vertex_file_path)[:, :3]
+    xyz = np.load(args.audio_vertices_file_path)
     forces = np.load(args.audio_forces_file_path)
     N = xyz.shape[0]
     #N: number of data
@@ -213,7 +211,7 @@ def AudioNet_eval(args):
     preds_z = np.zeros((feats_z.shape[0], 2))
     N_rand = args.audio_batchSize
 
-    batch_loss = []
+    print("Begin rendering audios in", args.audio_results_dir)
     for i in trange(feats_x.shape[0] // N_rand + 1):
         curr_feats_x = torch.Tensor(feats_x[i*N_rand:(i+1)*N_rand]).to(device)
         curr_feats_y = torch.Tensor(feats_y[i*N_rand:(i+1)*N_rand]).to(device)
@@ -253,12 +251,13 @@ def AudioNet_eval(args):
         # Write WAV file
         output_path = os.path.join(args.audio_results_dir, str(i+1) + '.wav')
         write(output_path, audio_sampling_rate, signal.astype(np.float32))
+    print('Done rendering audios in', args.audio_results_dir)
 
 
 def TouchNet_eval(args):
     touch_network_depth = 8
 
-    xyz = np.load(args.touch_vertex_file_path)[:, :3]
+    xyz = np.load(args.touch_vertices_file_path)
 
     #N: number of data
     #C: channels
@@ -309,7 +308,7 @@ def TouchNet_eval(args):
     preds = np.zeros((feats.shape[0], 3))
     N_rand = args.touch_batchSize
 
-    batch_loss = []
+    print("Begin rendering touch tactiles in", args.touch_results_dir)
     for i in trange(feats.shape[0] // N_rand + 1):
         curr_feats = torch.Tensor(feats[i*N_rand:(i+1)*N_rand]).to(device)
         embedded = embed_fn(curr_feats)
@@ -322,13 +321,12 @@ def TouchNet_eval(args):
     preds = np.clip(np.rint(preds), 0, 255).astype(np.uint8)
     preds = preds.transpose(0,2,3,1)
 
-    os.makedirs(args.touch_results_path, exist_ok=True)
+    os.makedirs(args.touch_results_dir, exist_ok=True)
     #save evaluation results
     for i in trange(N):
-        filename = os.path.join(args.touch_results_path, '{}.png'.format(i+1))
+        filename = os.path.join(args.touch_results_dir, '{}.png'.format(i+1))
         imageio.imwrite(filename, preds[i])
-
-    #np.save(os.path.join(args.touch_results_path, "touch.npy"), preds)
+    print("Done rendering touch tactiles in", args.touch_results_dir)
 
 
 if __name__ =='__main__':
@@ -338,6 +336,6 @@ if __name__ =='__main__':
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
     VisionNet_eval(args=args)
-    #AudioNet_eval(args=args)
-    #TouchNet_eval(args=args)
+    AudioNet_eval(args=args)
+    TouchNet_eval(args=args)
 

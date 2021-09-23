@@ -80,7 +80,6 @@ def convert_cameras_to_nerf_format(anno):
 
 def load_osf_data(test_file_path):
 
-    imgs = None
     all_poses = []
     all_metadata = []
     counts = [0]
@@ -101,4 +100,4 @@ def load_osf_data(test_file_path):
 
     H, W, focal = 256, 256, 355.5555419921875
 
-    return imgs, poses, [H, W, focal], i_split, metadata
+    return poses, [H, W, focal], i_split, metadata
