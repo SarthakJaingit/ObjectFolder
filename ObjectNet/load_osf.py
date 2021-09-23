@@ -38,6 +38,19 @@ def pose_spherical(theta, phi, radius):
     c2w = torch.Tensor(np.array([[-1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]])) @ c2w
     return c2w
 
+def coordinates_to_c2w(x, y, z, r=2.5):
+    theta = np.arccos(z / r)
+    phi = np.arctan2(x, -y)
+    Rx = np.array([[1, 0, 0], [0, np.cos(theta), -np.sin(theta)], [0, np.sin(theta), np.cos(theta)]])
+    Rz = np.array([[np.cos(phi), -np.sin(phi), 0], [np.sin(phi), np.cos(phi), 0], [0, 0, 1]])
+    R = Rz @ Rx
+    c2w = R.tolist()
+    c2w[0].append(x)
+    c2w[1].append(y)
+    c2w[2].append(z)
+    c2w.append([0., 0., 0., 1.])
+    #c2w = np.array(c2w).astype(np.float32)
+    return c2w
 
 def convert_cameras_to_nerf_format(anno):
     """
@@ -61,60 +74,31 @@ def convert_cameras_to_nerf_format(anno):
         c2w[:3, 2] *= -1  # forwards -> back
         c2w_list.append(c2w)
     c2w = np.array(c2w_list)
+    print("c2w: ", c2w)
     return c2w
 
 
 def load_osf_data(test_file_path):
-    """
-    Returns:
-        imgs: [H, W, 4] np.float32. Array of images in RGBA format, and normalized
-            between [0, 1].
-    """
 
-    splits = ['test']
-    metas = {}
-    for s in splits:
-        with open(test_file_path, 'r') as fp:
-            anno = json.load(fp)
-
-        # Convert camera matrices into NeRF format.
-        c2w = convert_cameras_to_nerf_format(anno)
-        for i in range(len(anno)):
-            anno[i]['c2w'] = c2w[i]
-
-        metas[s] = anno
-
+    imgs = None
     all_poses = []
     all_metadata = []
     counts = [0]
-    for s in splits:
-        meta = metas[s]
-        poses = []
-        metadata = []
-        skip = 1
-
-        for frame in meta[::skip]:
-            fname = os.path.join(frame['filename'])
-            poses.append(frame['c2w'])  # [4, 4]
-            metadata.append(frame['light_pos'])  # [3,]
-
-        poses = np.array(poses).astype(np.float32)  # [N, 4, 4]
-        metadata = np.array(metadata).astype(np.float32)  # [N, 3]
-        counts.append(counts[-1] + poses.shape[0])
+    test_file = np.load(test_file_path)
+    N = test_file.shape[0]
+    for i in range(N):
+        cx, cy, cz, lx, ly, lz = test_file[i]
+        poses = coordinates_to_c2w(cx, cy, cz)
+        metadata = np.array([[lx, ly, lz]]).astype(np.float32)
         all_poses.append(poses)
         all_metadata.append(metadata)
 
-    # Create a list where each element contains example indices for each split.
-    i_split = [np.arange(counts[i], counts[i+1]) for i in range(len(splits))]
+    poses = np.array(all_poses).astype(np.float32)
 
-    imgs = None
-    poses = np.concatenate(all_poses, 0)  # [N, 4, 4]
-    metadata = np.concatenate(all_metadata, 0)  # [N, 3]
+    metadata = np.concatenate(all_metadata, 0)
+    counts.append(N)
+    i_split = [np.arange(counts[0], counts[1])]
 
-    # Extract the height and width from the shape of the first image example.
-    H, W = 256, 256
-
-    # Compute the focal length.
-    focal = meta[0]['K'][0][0]
+    H, W, focal = 256, 256, 355.5555419921875
 
     return imgs, poses, [H, W, focal], i_split, metadata
