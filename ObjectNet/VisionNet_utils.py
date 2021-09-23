@@ -387,7 +387,7 @@ def render_path(render_poses, hwf, chunk, render_kwargs, gt_imgs=None, savedir=N
 
         if savedir is not None:
             rgb8 = to8b(rgbs[-1])
-            filename = os.path.join(savedir, '{}.png'.format(i))
+            filename = os.path.join(savedir, '{}.png'.format(i+1))
             imageio.imwrite(filename, rgb8)
 
     rgbs = np.stack(rgbs, 0)
