@@ -62,9 +62,9 @@ For example:
 ```
 
 The rendered images will be saved in `demo/vision_results/`.
-<p float="left">
-  <img src="demo/vision_results/1.png" width="100" />
-  <img src="demo/vision_results/2.png" width="100" />
-  <img src="demo/vision_results/3.png" width="100" />
-  <img src="demo/vision_results/4.png" width="100" />
+<p float="middle">
+  <img src="demo/vision_results/1.png" />
+  <img src="demo/vision_results/2.png" />
+  <img src="demo/vision_results/3.png" />
+  <img src="demo/vision_results/4.png" />
 </p>
