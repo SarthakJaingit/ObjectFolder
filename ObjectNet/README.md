@@ -68,3 +68,14 @@ The rendered images will be saved in `demo/vision_results/`.
   <img src="demo/vision_results/3.png" width="200"/>
   <img src="demo/vision_results/4.png" width="200"/>
 </p>
+
+Then rendered audios will be saved in `demo/audio_results/`.
+TODO...
+
+The rendered touch tactile RGB images will be saved in `demo/touch_results/`.
+<p float="middle">
+  <img src="demo/touch_results/1.png" width="200"/>
+  <img src="demo/touch_results/2.png" width="200"/>
+  <img src="demo/touch_results/3.png" width="200"/>
+  <img src="demo/touch_results/4.png" width="200"/>
+</p>
