@@ -51,12 +51,20 @@ This code can be given with the following command-line arguments:
 
 For example:
 ```
-  $ python evaluate.py --object_file_path ../Objects/1/ObjectFile.pth \
-      --vision_test_file_path vision_test.json \
-      --vision_results_dir ./vision_results \
-      --audio_vertex_file_path audio_vertices.npy \
-      --audio_forces_file_path audio_forces.npy \
-      --audio_results_dir ./audio_results \
-      --touch_vertex_file_path touch_vertices.npy \
-      --touch_results_path ./touch_results
+  $ python evaluate.py --object_file_path ../Objects/25/ObjectFile.pth \
+      --vision_test_file_path demo/vision_demo.npy \
+      --vision_results_dir demo/vision_results/ \
+      --audio_vertices_file_path demo/audio_demo_vertices.npy \
+      --audio_forces_file_path demo/audio_demo_forces.npy \
+      --audio_results_dir demo/audio_results/ \
+      --touch_vertices_file_path demo/touch_demo_vertices.npy \
+      --touch_results_dir demo/touch_results/
 ```
+
+The rendered images will be saved in `demo/vision_results/`.
+<p float="left">
+  <img src="demo/vision_results/1.png" width="100" />
+  <img src="demo/vision_results/2.png" width="100" />
+  <img src="demo/vision_results/3.png" width="100" />
+  <img src="demo/vision_results/4.png" width="100" />
+</p>
