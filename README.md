@@ -1,4 +1,25 @@
-# ObjectNet
+## ObjectFolder: A Dataset of Objects with Implicit Visual, Auditory, and Tactile Representations (CoRL 2021)
+[[Project Page]](https://ai.stanford.edu/~rhgao/objectfolder/)    [[arXiv]](https://arxiv.org/abs/2109.07991) 
+
+<img src='ObjectFolder_teaser.png' align="right" width=350>
+
+<br/>
+
+[ObjectFolder: A Dataset of Objects with Implicit Visual, Auditory, and Tactile Representations](https://arxiv.org/abs/2109.07991)  
+ [Ruohan Gao](https://www.ai.stanford.edu/~rhgao/),  [Yen-Yu Chang](https://yuyuchang.github.io/),  [Shivani Mall](), [Li Fei-Fei](https://profiles.stanford.edu/fei-fei-li), [Jiajun Wu](https://jiajunwu.com/)<br/>
+ Stanford University  
+ In Conference on Robot Learning (**CoRL**), 2021  
+ 
+<br/>
+
+If you find our code or project useful in your research, please cite:
+
+    @inproceedings{gao2021ObjectFolder,
+      title = {ObjectFolder: A Dataset of Objects with Implicit Visual, Auditory, and Tactile Representations},
+      author = {Gao, Ruohan and Chang, Yen-Yu and Mall, Shivani and Fei-Fei, Li and Wu, Jiajun},
+      booktitle = {CoRL},
+      year = {2021}
+    }
 
 ### Rendering images, audios, and touch tactiles
 Run the following command to render images, audios, and tactile RGB images.
