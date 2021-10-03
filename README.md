@@ -23,9 +23,9 @@ If you find our code or project useful in your research, please cite:
 
 ### About ObjectFolder Dataset
 
-<img src='dataset_visualization.png' align="right" width=350>
+<img src='dataset_visualization.png' align="right" width=400>
 
-ObjectFolder is a dataset of 100 objects in the form of implicit representations. It contains 100 Object Files each containing the complete multisensory profile for an object instance. Each Object File implicit neural representation network contains three sub-networks---VisionNet, AudioNet, and TouchNet, which through querying with the corresponding extrinsic parameters we can obtain the visual appearance of the object from different views, impact sounds of the object at each position, and tactile sensing of the object at every surface location, respectively.
+ObjectFolder is a dataset of 100 objects in the form of implicit representations. It contains 100 Object Files each containing the complete multisensory profile for an object instance. Each Object File implicit neural representation network contains three sub-networks---VisionNet, AudioNet, and TouchNet, which through querying with the corresponding extrinsic parameters we can obtain the visual appearance of the object from different views, impact sounds of the object at each position, and tactile sensing of the object at every surface location, respectively. The dataset contains common household objects of diverse categories such as bowl, mug, cabinet, television, shelf, fork, and spoon. See the paper for details.
 
 <br/>
 
@@ -41,6 +41,8 @@ pip install -r requirements.txt
   ## Dependencies
   - PyTorch 1.? 
   - numpy 4.???
+ 
+</details>
 
 ### Rendering images, audios, and touch tactiles
 Run the following command to render images, audios, and tactile RGB images.
@@ -102,5 +104,8 @@ The rendered touch tactile RGB images will be saved in `demo/touch_results/`.
   <img src="demo/touch_results/4.png" width="200"/>
 </p>
  
- ### License
+### Acknowlegements
+The code for the neural implicit representation network is adapted from Yen-Chen Lin's [PyTorch implementation](https://github.com/yenchenlin/nerf-pytorch) of [NeRF](https://www.matthewtancik.com/nerf) and Michelle Guo's TensorFlow implementation of [OSF](https://www.shellguo.com/osf/).
+
+### License
 ObjectFolder is CC BY 4.0 licensed, as found in the LICENSE file. The 100 high quality 3D objects originally come from online repositories including: 20 objects from [3D Model Haven](https://3dmodelhaven.com/), 28 objects from the [YCB dataset](http://ycb-benchmarks.s3-website-us-east-1.amazonaws.com/), and 52 objects from [Google Scanned Objects](https://app.ignitionrobotics.org/GoogleResearch/fuel/collections/Google\%20Scanned\%20Objects). Please also refer to their original lisence file.
