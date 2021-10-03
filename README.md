@@ -21,6 +21,26 @@ If you find our code or project useful in your research, please cite:
       year = {2021}
     }
 
+### About ObjectFolder Dataset
+ObjectFolder is a dataset of 100 objects in the form of implicit representations. It contains 100 Object Files with each containing the complete multisensory profile for an object instance. Each Object File implicit neural representation network contains three sub-networks---VisionNet, AudioNet, and TouchNet, which through querying with the corresponding extrinsic parameters we can obtain the visual appearance of the object from different views, impact sounds of the object at each position, and tactile sensing of the object at every surface location, respectively.
+
+<img src='dataset_visualization.png' align="left" width=500>
+
+<br/>
+
+### Dataset Download and Preparation
+```
+git clone https://github.com/rhgao/ObjectFolder.git
+cd ObjectFolder
+pip install -r requirements.txt
+```
+<details>
+  <summary> Dependencies (click to expand) </summary>
+  
+  ## Dependencies
+  - PyTorch 1.? 
+  - numpy 4.???
+
 ### Rendering images, audios, and touch tactiles
 Run the following command to render images, audios, and tactile RGB images.
 ```
