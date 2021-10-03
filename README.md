@@ -33,16 +33,8 @@ ObjectFolder is a dataset of 100 objects in the form of implicit representations
 ```
 git clone https://github.com/rhgao/ObjectFolder.git
 cd ObjectFolder
-pip install -r requirements.txt
+pip install -e .
 ```
-<details>
-  <summary> Dependencies (click to expand) </summary>
-  
-  ## Dependencies
-  - PyTorch 1.? 
-  - numpy 4.???
- 
-</details>
 
 ### Rendering images, audios, and touch tactiles
 Run the following command to render images, audios, and tactile RGB images.
