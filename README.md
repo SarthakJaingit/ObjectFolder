@@ -33,7 +33,7 @@ ObjectFolder is a dataset of 100 objects in the form of implicit representations
 ```
 git clone https://github.com/rhgao/ObjectFolder.git
 cd ObjectFolder
-pip install -e .
+pip install -r requirements.txt .
 ```
 
 ### Rendering images, audios, and touch tactiles
@@ -67,7 +67,7 @@ This code can be given with the following command-line arguments:
 ### Demo
 For example:
 ```
-  $ python evaluate.py --object_file_path ../Objects/25/ObjectFile.pth \
+  $ python evaluate.py --object_file_path Objects/25/ObjectFile.pth \
       --vision_test_file_path demo/vision_demo.npy \
       --vision_results_dir demo/vision_results/ \
       --audio_vertices_file_path demo/audio_demo_vertices.npy \
