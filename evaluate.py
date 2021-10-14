@@ -32,7 +32,6 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def config_parser():
     import configargparse
-    import yaml
     parser = configargparse.ArgParser(
         config_file_parser_class=configargparse.YAMLConfigFileParser
     )
