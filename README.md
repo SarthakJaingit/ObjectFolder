@@ -33,11 +33,11 @@ ObjectFolder is a dataset of 100 objects in the form of implicit representations
 ```
 git clone https://github.com/rhgao/ObjectFolder.git
 cd ObjectFolder
-pip install -r requirements.txt .
+pip install -r requirements.txt
 ```
 
-### Rendering images, audios, and touch tactiles
-Run the following command to render images, audios, and tactile RGB images.
+### Rendering visual, auditory, and tactile sensory data 
+Run the following command to render images, impact sounds, and tactile RGB images:
 ```
   $ python evaluate.py --object_file_path path_of_ObjectFile \
       --vision_test_file_path path_of_vision_test_file \
@@ -48,24 +48,24 @@ Run the following command to render images, audios, and tactile RGB images.
       --touch_vertices_file_path path_of_touch_testing_vertices_file \
       --touch_results_path path_of_touch_results_directory
 ```
-This code can be given with the following command-line arguments:
+This code can be run with the following command-line arguments:
   * `--object_file_path`: The path of ObjectFile.
-  * `--vision_test_file_path`: The path of vision testing file, which should be a npy file.
-  * `--vision_results_dir`: The path of vision results directory to save rendered images.
-  * `--audio_vertices_file_path`: The path of audio testing vertices file, which should be a npy file.
-  * `--audio_forces_file_path`: The path of forces file, which should be a npy file.
-  * `--audio_results_dir`: The path of audio results directory to save rendered audio wav files.
-  * `--touch_vertices_file_path`: The path of touch testing vertices file, which should be a npy file.
-  * `--touch_results_dir`: The path of touch results directory to save rendered tactile RGB images.
+  * `--vision_test_file_path`: The path of the testing file for vision, which should be a npy file.
+  * `--vision_results_dir`: The path of the vision results directory to save rendered images.
+  * `--audio_vertices_file_path`: The path of the testing vertices file for audio, which should be a npy file.
+  * `--audio_forces_file_path`: The path of forces file for audio, which should be a npy file.
+  * `--audio_results_dir`: The path of audio results directory to save rendered impact sounds as .wav files.
+  * `--touch_vertices_file_path`: The path of the testing vertices file for touch, which should be a npy file.
+  * `--touch_results_dir`: The path of the touch results directory to save rendered tactile RGB images.
 
 ### Data format
-  * `--vision_test_file_path`: It is a npy file with shape as (N, 6), where N is the number of testing viewpoints. Each data point represents the coordinates of the camera and the light. It should be (camera_x, camera_y, camera_z, light_x, light_y, light_z).
-  * `--audio_vertices_file_path`: It is a npy file with shape as (N, 3), where N is the number of audio testing vertices on objects. Each data point represents the coordinates on objects. It should be (x, y, z).
-  * `--audio_forces_file_path`: It is a npy file with shape as (N, 3), where N is the number of audio testing vertices on objects. Each data point represents the forces on coordinates. It should be (F_x, F_y, F_z).
-  * `--touch_vertices_file_path`: It is a npy file with shape as (N, 3), where N is the number of touch testing vertices on objects. Each data point represents the coordinates on objects. It should be (x, y, z).
+  * `--vision_test_file_path`: It is a npy file with shape of (N, 6), where N is the number of testing viewpoints. Each data point contains the coordinates of the camera and the light in the form of (camera_x, camera_y, camera_z, light_x, light_y, light_z).
+  * `--audio_vertices_file_path`: It is a npy file with shape of (N, 3), where N is the number of testing vertices. Each data point represents a coordinate on the object in the form of (x, y, z).
+  * `--audio_forces_file_path`: It is a npy file with shape of (N, 3), where N is the number of testing vertices. Each data point represents the force values for the corresponding impact in the form of (F_x, F_y, F_z).
+  * `--touch_vertices_file_path`: It is a npy file with shape of (N, 3), where N is the number of testing vertices. Each data point contains a coordinate on the object in the form of (x, y, z).
 
 ### Demo
-For example:
+Below we show an example of rendering the visual, auditory, and tactile data from the ObjectFile implicit representation for one object:
 ```
   $ python evaluate.py --object_file_path Objects/25/ObjectFile.pth \
       --vision_test_file_path demo/vision_demo.npy \
@@ -77,25 +77,8 @@ For example:
       --touch_results_dir demo/touch_results/
 ```
 
-The rendered images will be saved in `demo/vision_results/`.
-<p float="middle">
-  <img src="demo/vision_results/1.png" width="200"/>
-  <img src="demo/vision_results/2.png" width="200"/>
-  <img src="demo/vision_results/3.png" width="200"/>
-  <img src="demo/vision_results/4.png" width="200"/>
-</p>
+The rendered images, impact sounds, tactile images will be saved in `demo/vision_results/`, `demo/audio_results/`, and `demo/touch_results/`, respectively.
 
-Then rendered audios will be saved in `demo/audio_results/`.
-TODO...
-
-The rendered touch tactile RGB images will be saved in `demo/touch_results/`.
-<p float="middle">
-  <img src="demo/touch_results/1.png" width="200"/>
-  <img src="demo/touch_results/2.png" width="200"/>
-  <img src="demo/touch_results/3.png" width="200"/>
-  <img src="demo/touch_results/4.png" width="200"/>
-</p>
- 
 ### Acknowlegements
 The code for the neural implicit representation network is adapted from Yen-Chen Lin's [PyTorch implementation](https://github.com/yenchenlin/nerf-pytorch) of [NeRF](https://www.matthewtancik.com/nerf) and Michelle Guo's TensorFlow implementation of [OSF](https://www.shellguo.com/osf/).
 
