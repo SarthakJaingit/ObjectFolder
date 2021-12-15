@@ -40,23 +40,23 @@ def config_parser():
     parser.add_argument('--config', is_config_file=True, help='config file path')
 
     # VisionNet options
-    parser.add_argument("--vision_test_file_path", default='/viscam/u/rhgao/datasets/ObjectFiles/modelhaven/1/VisionNet_osf_data/test/anno.json', help='path to dataset')
-    parser.add_argument("--vision_results_dir", type=str, default='./results/vision-nerf/', help='dir to save evaluation results')
+    parser.add_argument("--vision_test_file_path", default='data/vision_demo.npy', help='The path of the testing file for vision, which should be a npy file.')
+    parser.add_argument("--vision_results_dir", type=str, default='./results/vision/', help='The path of the vision results directory to save rendered images.')
     parser.add_argument("--chunk", type=int, default=1024*32,
                         help='number of rays processed in parallel, decrease if running out of memory')
     parser.add_argument("--netchunk", type=int, default=1024*64,
                         help='number of pts sent through network in parallel, decrease if running out of memory')
 
     # AudioNet options
-    parser.add_argument('--audio_vertices_file_path', default='./data/vertex.npy', help='path to dataset')
-    parser.add_argument('--audio_forces_file_path', default='./data/forces.npy', help='path to dataset')
+    parser.add_argument('--audio_vertices_file_path', default='./data/audio_demo_vertices.npy', help='The path of the testing vertices file for audio, which should be a npy file.')
+    parser.add_argument('--audio_forces_file_path', default='./data/forces.npy', help='The path of forces file for audio, which should be a npy file.')
     parser.add_argument('--audio_batchSize', type=int, default=10000, help='input batch size')
-    parser.add_argument('--audio_results_dir', type=str, default='./results/audio-nerf/', help='dir to save evaluation results')
+    parser.add_argument('--audio_results_dir', type=str, default='./results/audio/', help='The path of audio results directory to save rendered impact sounds as .wav files.')
 
     # TouchNet options
-    parser.add_argument('--touch_vertices_file_path', default='./data/vertex.npy', help='path to dataset')
+    parser.add_argument('--touch_vertices_file_path', default='./data/touch_demo_vertices.npy', help='The path of the testing vertices file for touch, which should be a npy file.')
     parser.add_argument('--touch_batchSize', type=int, default=10000, help='input batch size')
-    parser.add_argument('--touch_results_dir', type=str, default='./results/audio-nerf/', help='dir to save evaluation results')
+    parser.add_argument('--touch_results_dir', type=str, default='./results/touch/', help='The path of the touch results directory to save rendered tactile RGB images.')
 
     return parser
 
@@ -102,18 +102,17 @@ def VisionNet_eval(args):
     # Move testing data to GPU
     render_poses = torch.Tensor(render_poses).to(device)
 
-    # Short circuit if only rendering out from trained model
     with torch.no_grad():
         images = None
 
         testsavedir = args.vision_results_dir
         os.makedirs(testsavedir, exist_ok=True)
-        print('Begin rendering images in', testsavedir)
+        print('Begin rendering images in ', testsavedir)
         rgbs, _ = VisionNet_utils.render_path(render_poses, hwf, args.chunk, render_kwargs_test,
                                 gt_imgs=images, savedir=testsavedir,
                                 c2w_staticcam=None, render_start=None,
                                 render_end=None)
-        print('Done rendering images in', testsavedir)
+        print('Done rendering images in ', testsavedir)
 
 
 def AudioNet_eval(args):
@@ -126,7 +125,10 @@ def AudioNet_eval(args):
     audio_network_depth = 8
     xyz = np.load(args.audio_vertices_file_path)
     forces = np.load(args.audio_forces_file_path)
+    xyz = xyz[0:1,:]
+    forces = forces[0:1]
     N = xyz.shape[0]
+    print(N)
     #N: number of data
     #D: number of dimension
     #C: number of channels, real and img
@@ -143,18 +145,13 @@ def AudioNet_eval(args):
 
     k = 4 # Average over 4 nearest neighbors
     xyz_in_voxel = np.zeros((4, N, 3))
-
-    print("Voxelizing coordinates...")
     for i in range(N):
         obj_coordinates = xyz[i]
         binvox_coordinates = AudioNet_utils.transform_mesh_collision_binvox(obj_coordinates, translation, scale)
         coordinates_in_voxel = binvox_coordinates * dim
         voxel_verts_index = vert_tree.query(coordinates_in_voxel, k)[1]
-
         for j in range(k):
             xyz_in_voxel[j, i] = voxel_vertex[voxel_verts_index[j]]
-
-    print("Finished voxelizing...")
 
     xyz_in_voxel = np.repeat(xyz_in_voxel.reshape((4, N, 1, 3)), F * T, axis=2)
     #normalize xyz_in_voxel to [-1, 1]
@@ -205,12 +202,13 @@ def AudioNet_eval(args):
     model.eval()
     loss_fn = torch.nn.MSELoss(reduction='mean')
 
+    start_time = time.time()
     preds_x = np.zeros((feats_x.shape[0], 2))
     preds_y = np.zeros((feats_y.shape[0], 2))
     preds_z = np.zeros((feats_z.shape[0], 2))
     N_rand = args.audio_batchSize
 
-    print("Begin rendering audios in", args.audio_results_dir)
+    print("Begin rendering impact sounds in ", args.audio_results_dir)
     for i in trange(feats_x.shape[0] // N_rand + 1):
         curr_feats_x = torch.Tensor(feats_x[i*N_rand:(i+1)*N_rand]).to(device)
         curr_feats_y = torch.Tensor(feats_y[i*N_rand:(i+1)*N_rand]).to(device)
@@ -247,10 +245,12 @@ def AudioNet_eval(args):
             temp = signal_x * force_x + signal_y * force_y + signal_z * force_z
             signal += temp
         signal = signal / np.abs(signal).max()
+        end_time = time.time()
+        print(end_time - start_time)
         # Write WAV file
         output_path = os.path.join(args.audio_results_dir, str(i+1) + '.wav')
         write(output_path, audio_sampling_rate, signal.astype(np.float32))
-    print('Done rendering audios in', args.audio_results_dir)
+    print('Done rendering impact sounds in ', args.audio_results_dir)
 
 
 def TouchNet_eval(args):
@@ -282,7 +282,6 @@ def TouchNet_eval(args):
     data_x = np.concatenate((w_feats, h_feats), axis=1)
     data_x = np.transpose(data_x.reshape((N, 2, -1)), axes = [0, 2, 1])
 
-
     xyz = np.repeat(xyz.reshape((N, 1, 3)), W * H, axis=1)
 
     #normalize xyz to [-1, 1]
@@ -293,7 +292,6 @@ def TouchNet_eval(args):
     #Now concatenate xyz and feats to get final feats matrix as [x, y, z, w, h, r, g, b] 
     data= np.concatenate((xyz, data_x), axis=2).reshape((-1, 5))
     feats = data
-
 
     embed_fn, input_ch = TouchNet_model.get_embedder(10, 0)
     model = TouchNet_model.NeRF(D = touch_network_depth, input_ch = input_ch, output_ch = 3)
@@ -307,16 +305,18 @@ def TouchNet_eval(args):
     preds = np.zeros((feats.shape[0], 3))
     N_rand = args.touch_batchSize
 
-    print("Begin rendering touch tactiles in", args.touch_results_dir)
+    print("Begin rendering tactile images in ", args.touch_results_dir)
+    start_time = time.time()
     for i in trange(feats.shape[0] // N_rand + 1):
         curr_feats = torch.Tensor(feats[i*N_rand:(i+1)*N_rand]).to(device)
         embedded = embed_fn(curr_feats)
         results = model(embedded)            
         preds[i*N_rand:(i+1)*N_rand, :] = results.detach().cpu().numpy()
-
+    end_time = time.time()
+    print(end_time - start_time)
+    
     preds = (((preds + 1) / 2) * 255)
     preds = np.transpose(preds.reshape((N, -1, 3)), axes = [0, 2, 1]).reshape((N, C, W, H))
-
     preds = np.clip(np.rint(preds), 0, 255).astype(np.uint8)
     preds = preds.transpose(0,2,3,1)
 
@@ -325,8 +325,7 @@ def TouchNet_eval(args):
     for i in trange(N):
         filename = os.path.join(args.touch_results_dir, '{}.png'.format(i+1))
         imageio.imwrite(filename, preds[i])
-    print("Done rendering touch tactiles in", args.touch_results_dir)
-
+    print("Done rendering tactile images in ", args.touch_results_dir)
 
 if __name__ =='__main__':
     parser = config_parser()
@@ -337,4 +336,3 @@ if __name__ =='__main__':
     VisionNet_eval(args=args)
     AudioNet_eval(args=args)
     TouchNet_eval(args=args)
-
