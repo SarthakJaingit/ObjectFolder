@@ -267,6 +267,8 @@ def TouchNet_eval(args):
     checkpoint = torch.load(args.object_file_path)
 
     rotation_max = 15
+    depth_max = 0.04
+    depth_min = 0.0339
     displacement_min = 0.0005
     displacement_max = 0.0020
     depth_max = 0.04
@@ -290,7 +292,7 @@ def TouchNet_eval(args):
     theta = (theta - np.radians(0)) / (np.radians(rotation_max) - np.radians(0))
 
     #normalize displacement to [-1,1]
-    displacement = (displacement - displacement_min) / (displacement_max - displacement_min)
+    displacement_norm = (displacement - displacement_min) / (displacement_max - displacement_min)
 
     #normalize coordinates to [-1,1]
     vertex_coordinates = (vertex_coordinates - vertex_min) / (vertex_max - vertex_min)
@@ -312,13 +314,13 @@ def TouchNet_eval(args):
     theta = np.repeat(theta.reshape((N, 1, 1)), rgb_width * rgb_height, axis=1)
     phi_x = np.repeat(phi_x.reshape((N, 1, 1)), rgb_width * rgb_height, axis=1)
     phi_y = np.repeat(phi_y.reshape((N, 1, 1)), rgb_width * rgb_height, axis=1)
-    displacement = np.repeat(displacement.reshape((N, 1, 1)), rgb_width * rgb_height, axis=1)
+    displacement_norm = np.repeat(displacement_norm.reshape((N, 1, 1)), rgb_width * rgb_height, axis=1)
     vertex_coordinates = np.repeat(vertex_coordinates.reshape((N, 1, 3)), rgb_width * rgb_height, axis=1)
 
     data_wh = np.concatenate((w_feats, h_feats), axis=1)
     data_wh = np.transpose(data_wh.reshape((N, 2, -1)), axes=[0, 2, 1])
     #Now get final feats matrix as [x, y, z, theta, phi_x, phi_y, displacement, w, h]
-    data = np.concatenate((vertex_coordinates, theta, phi_x, phi_y, displacement, data_wh), axis=2).reshape((-1, 9))
+    data = np.concatenate((vertex_coordinates, theta, phi_x, phi_y, displacement_norm, data_wh), axis=2).reshape((-1, 9))
 
     #checkpoint = torch.load(args.object_file_path)
     embed_fn, input_ch = TouchNet_model.get_embedder(10, 0)
@@ -342,11 +344,11 @@ def TouchNet_eval(args):
         results = model(embedded)
         preds[i*batch_size:(i+1)*batch_size, :] = results.detach().cpu().numpy()
 
-    preds = preds * 255
+    preds = preds  * (depth_max - depth_min) + depth_min
     preds = np.transpose(preds.reshape((N, -1, 1)), axes = [0, 2, 1]).reshape((N, rgb_width, rgb_height))
     taxim = TaximRender("./calibs/")
     for i in trange(N):
-        height_map, contact_map, tactile_map = taxim.render(preds[i], displacement[i, 0, 0])
+        height_map, contact_map, tactile_map = taxim.render(preds[i], displacement[i])
         tactile_map = Image.fromarray(tactile_map.astype(np.uint8), 'RGB')
         filename = os.path.join(testsavedir, '{}.png'.format(i+1))
         tactile_map.save(filename)

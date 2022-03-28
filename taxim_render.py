@@ -115,6 +115,7 @@ class TaximRender:
 
         # add back ground
         tactile_img = sim_img_r + self.real_bg
+        tactile_img = np.clip(tactile_img, 0, 255)
 
         return height_map, contact_mask, tactile_img
 
