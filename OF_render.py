@@ -1,18 +1,11 @@
 import os
-import datetime
-import sys
 import torch
 import torch.nn as nn
 import numpy as np
-import imageio
-import json
-import random
-import time
-from tqdm import tqdm, trange
+from tqdm import trange
 import scipy
 import librosa
 from scipy.io.wavfile import write
-from scipy.spatial import KDTree
 import ddsp_torch as ddsp
 import itertools
 from taxim_render import TaximRender
@@ -54,7 +47,7 @@ def config_parser():
 
 
 def VisionNet_eval(args):
-
+    
     checkpoint = torch.load(args.object_file_path)
     cfg = checkpoint['VisionNet']['cfg']
 
@@ -356,7 +349,7 @@ def TouchNet_eval(args):
 if __name__ =='__main__':
     parser = config_parser()
     args = parser.parse_args()
-    modalities = args.modality.strip().split(",") 
+    modalities = args.modality.strip().split(",")
 
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
 
